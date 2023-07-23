@@ -1,4 +1,4 @@
-package com.pppp0722.nulllovebe.global
+package com.pppp0722.nulllovebe.global.sms
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.beans.factory.annotation.Value

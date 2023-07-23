@@ -1,6 +1,8 @@
 package com.pppp0722.nulllovebe.user.service
 
-import com.pppp0722.nulllovebe.global.SmsSender
+import com.pppp0722.nulllovebe.global.exception.CustomException
+import com.pppp0722.nulllovebe.global.exception.ErrorCode
+import com.pppp0722.nulllovebe.global.sms.SmsSender
 import com.pppp0722.nulllovebe.user.dto.SendAuthCodeDto
 import com.pppp0722.nulllovebe.user.dto.SignUpDto
 import com.pppp0722.nulllovebe.user.dto.UserDto
@@ -8,8 +10,10 @@ import com.pppp0722.nulllovebe.user.entity.Auth
 import com.pppp0722.nulllovebe.user.entity.User
 import com.pppp0722.nulllovebe.user.repository.AuthRepository
 import com.pppp0722.nulllovebe.user.repository.UserRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.*
 import kotlin.random.Random
 
 
@@ -19,24 +23,30 @@ class UserService(
     private val authRepository: AuthRepository,
     private val smsSender: SmsSender
 ) {
-
     @Transactional
     fun signUp(signUpDto: SignUpDto): UserDto {
-        userRepository.findByUserIdWithLock(signUpDto.userId)?.let{
-            throw IllegalArgumentException("이미 존재하는 아이디입니다. userId: ${signUpDto.userId}")}
+        if (userRepository.existsByUserId(signUpDto.userId)) {
+            throw CustomException(ErrorCode.DUPLICATED_USER_ID)
+        }
 
         val auth = authRepository.findById(signUpDto.phone)
-            .orElseThrow { IllegalArgumentException("인증 정보가 존재하지 않습니다.") }
-
-        if (auth.authCode != signUpDto.authCode) {
-            throw IllegalArgumentException("인증 코드가 일치하지 않습니다.")
+        if(!isAuthenticated(auth, signUpDto.authCode)) {
+            throw CustomException(ErrorCode.SMS_AUTH_FAILURE)
         }
 
         val user = User.fromSignUpDto(signUpDto)
-        val signedUpUser = userRepository.save(user)
+
+        val signedUpUser = try {
+            userRepository.save(user)
+        } catch (e: DataIntegrityViolationException) {
+            throw CustomException(ErrorCode.DUPLICATED_USER_ID)
+        }
 
         return UserDto.fromEntity(signedUpUser)
     }
+
+    private fun isAuthenticated(auth: Optional<Auth>, authCode: String) =
+        auth.isPresent && (auth.get().authCode == authCode)
 
     fun sendAuthCode(sendAuthCodeDto: SendAuthCodeDto) {
         val authCode = generateRandomAuthCode()

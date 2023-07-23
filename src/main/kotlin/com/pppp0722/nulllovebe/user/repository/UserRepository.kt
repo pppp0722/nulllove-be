@@ -10,7 +10,5 @@ import javax.persistence.LockModeType
 @Repository
 interface UserRepository : JpaRepository<User, Long>{
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT u FROM User u WHERE u.userId = :userId")
-    fun findByUserIdWithLock(userId: String): User?
+    fun existsByUserId(userId: String): Boolean
 }
