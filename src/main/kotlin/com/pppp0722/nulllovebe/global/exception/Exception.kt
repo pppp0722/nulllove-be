@@ -11,6 +11,7 @@ enum class ErrorCode(
 
     // 사용자 관련
     DUPLICATED_USER_ID(HttpStatus.BAD_REQUEST, "이미 존재하는 아이디입니다."),
+    SMS_SEND_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 전송에 실패했습니다"),
     SMS_AUTH_FAILURE(HttpStatus.BAD_REQUEST, "SMS 인증에 실패했습니다."),
     LOGIN_DENIED(HttpStatus.UNAUTHORIZED, "이메일 혹은 비밀번호가 일치하지 않습니다."),
 

@@ -10,12 +10,13 @@ import com.pppp0722.nulllovebe.user.entity.Auth
 import com.pppp0722.nulllovebe.user.entity.User
 import com.pppp0722.nulllovebe.user.repository.AuthRepository
 import com.pppp0722.nulllovebe.user.repository.UserRepository
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 import kotlin.random.Random
-
 
 @Service
 class UserService(
@@ -23,6 +24,8 @@ class UserService(
     private val authRepository: AuthRepository,
     private val smsSender: SmsSender
 ) {
+    private val logger = LoggerFactory.getLogger(UserService::class.java)
+
     @Transactional
     fun signUp(signUpDto: SignUpDto): UserDto {
         if (userRepository.existsByUserId(signUpDto.userId)) {
@@ -30,7 +33,7 @@ class UserService(
         }
 
         val auth = authRepository.findById(signUpDto.phone)
-        if(!isAuthenticated(auth, signUpDto.authCode)) {
+        if (!isAuthenticated(auth, signUpDto.authCode)) {
             throw CustomException(ErrorCode.SMS_AUTH_FAILURE)
         }
 
@@ -42,7 +45,10 @@ class UserService(
             throw CustomException(ErrorCode.DUPLICATED_USER_ID)
         }
 
-        return UserDto.fromEntity(signedUpUser)
+        val userDto = UserDto.fromEntity(signedUpUser)
+        logger.info("회원가입 완료. userDto: {}", userDto)
+
+        return userDto
     }
 
     private fun isAuthenticated(auth: Optional<Auth>, authCode: String) =
@@ -55,6 +61,8 @@ class UserService(
 
         val auth = Auth(sendAuthCodeDto.phone, authCode)
         authRepository.save(auth)
+
+        logger.info("SMS 인증 발송 완료. auth: {}", auth)
     }
 
     private fun generateRandomAuthCode() =
