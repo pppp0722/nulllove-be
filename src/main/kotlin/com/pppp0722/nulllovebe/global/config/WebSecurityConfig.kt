@@ -45,8 +45,12 @@ class WebSecurityConfig(
             .authorizeRequests()
             .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
             .antMatchers(
-                "/users/send-auth-code", "/users/sign-up", "/users/login", "/users/reissue-access-token"
-            ,"/api/save", "/api/read"
+                "/users/exists-by-userId/**",
+                "/users/exists-by-phone/**",
+                "/users/send-auth-code",
+                "/users/sign-up",
+                "/users/login",
+                "/users/reissue-access-token",
             ).permitAll()
             .anyRequest().hasAnyRole("USER")
             .and()
@@ -108,9 +112,10 @@ class AccessTokenAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val accessToken = request.getHeader("Access-Token")
+        val accessToken = request.cookies.firstOrNull{ it.name == "Access-Token"}?.value
 
         if (accessToken.isNullOrEmpty()) {
+            log.warn("Access Token 미존재")
             filterChain.doFilter(request, response)
             return
         }

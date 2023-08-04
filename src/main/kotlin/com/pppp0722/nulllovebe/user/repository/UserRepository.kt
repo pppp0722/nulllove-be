@@ -12,4 +12,6 @@ interface UserRepository : JpaRepository<User, Long> {
     fun existsByPhone(phone: String): Boolean
 
     fun findByUserId(userId: String): User?
+
+    fun findByLove(like: String): List<User>
 }

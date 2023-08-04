@@ -6,10 +6,7 @@ import com.pppp0722.nulllovebe.global.exception.CustomException
 import com.pppp0722.nulllovebe.global.exception.ErrorCode
 import com.pppp0722.nulllovebe.jwt.JwtGenerator
 import com.pppp0722.nulllovebe.sms.SmsSender
-import com.pppp0722.nulllovebe.user.dto.LoginDto
-import com.pppp0722.nulllovebe.user.dto.SendAuthCodeDto
-import com.pppp0722.nulllovebe.user.dto.SignUpDto
-import com.pppp0722.nulllovebe.user.dto.UserDto
+import com.pppp0722.nulllovebe.user.dto.*
 import com.pppp0722.nulllovebe.user.entity.Auth
 import com.pppp0722.nulllovebe.user.entity.RefreshToken
 import com.pppp0722.nulllovebe.user.entity.User
@@ -17,7 +14,6 @@ import com.pppp0722.nulllovebe.user.repository.AuthRepository
 import com.pppp0722.nulllovebe.user.repository.RefreshTokenRepository
 import com.pppp0722.nulllovebe.user.repository.UserRepository
 import org.slf4j.LoggerFactory
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -38,10 +34,10 @@ class UserService(
     private val log = LoggerFactory.getLogger(UserService::class.java)
 
     @Transactional(readOnly = true)
-    fun existsByUserId(userId: String) = userRepository.existsByUserId(userId)
+    fun existsByUserId(userId: String) = ExistsDto(userRepository.existsByUserId(userId))
 
     @Transactional(readOnly = true)
-    fun existsByPhone(phone: String) = userRepository.existsByPhone(phone)
+    fun existsByPhone(phone: String) = ExistsDto(userRepository.existsByPhone(phone))
 
     @Transactional(readOnly = true)
     fun sendAuthCode(sendAuthCodeDto: SendAuthCodeDto) {
@@ -70,6 +66,7 @@ class UserService(
 
     @Transactional
     fun signUp(signUpDto: SignUpDto) {
+        /*
         if (userRepository.existsByUserId(signUpDto.userId)) {
             throw CustomException(ErrorCode.DUPLICATED_USER_ID)
         }
@@ -86,6 +83,9 @@ class UserService(
         } catch (e: DataIntegrityViolationException) {
             throw CustomException(ErrorCode.DUPLICATED_USER_ID)
         }
+         */
+
+        val signedUpUser = userRepository.save(User.fromSignUpDto(signUpDto, passwordEncoder))
 
         val userDto = UserDto.fromEntity(signedUpUser)
         log.info("회원가입 완료. userDto: {}", userDto)
@@ -137,6 +137,22 @@ class UserService(
         val roles = decodedRefreshToken.getClaim("roles").asArray(String::class.java)
 
         return jwtGenerator.generateAccessToken(userId, roles)
+    }
+
+    @Transactional
+    fun setLove(userId: String, updateDto: UpdateDto) {
+        val user = userRepository.findByUserId(userId)
+        user?.love = updateDto.love
+    }
+
+    @Transactional(readOnly = true)
+    fun getLoveInfo(userId: String): LoveInfoDto {
+        val user = userRepository.findByUserId(userId)
+            ?: throw CustomException(ErrorCode.INVALID_PARAM_REQUEST)
+        val lovers = userRepository.findByLove(user.phone)
+        val matches = lovers.any { user.love == it.phone }
+
+        return LoveInfoDto(matches, lovers.size)
     }
 
     companion object {

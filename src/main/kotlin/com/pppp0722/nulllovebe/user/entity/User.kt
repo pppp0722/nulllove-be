@@ -13,6 +13,7 @@ data class User(
     var password: String,
     var phone: String,
     var role: String,
+    var love: String? = null,
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
 ) {

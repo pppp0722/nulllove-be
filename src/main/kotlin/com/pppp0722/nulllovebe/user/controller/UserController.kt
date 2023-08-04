@@ -2,14 +2,12 @@ package com.pppp0722.nulllovebe.user.controller
 
 import com.pppp0722.nulllovebe.global.util.ACCESS_TOKEN_TTL
 import com.pppp0722.nulllovebe.global.util.REFRESH_TOKEN_TTL
-import com.pppp0722.nulllovebe.user.dto.LoginDto
-import com.pppp0722.nulllovebe.user.dto.SendAuthCodeDto
-import com.pppp0722.nulllovebe.user.dto.SignUpDto
-import com.pppp0722.nulllovebe.user.dto.UserDto
+import com.pppp0722.nulllovebe.user.dto.*
 import com.pppp0722.nulllovebe.user.service.UserService
 import org.springframework.http.HttpHeaders.SET_COOKIE
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -66,4 +64,14 @@ class UserController(
             .toString()
         return ResponseEntity.ok().header(SET_COOKIE, cookie).build()
     }
+
+    @PatchMapping("/love")
+    fun setLove(@AuthenticationPrincipal userId: String, @RequestBody updateDto: UpdateDto): ResponseEntity<Unit> {
+        userService.setLove(userId, updateDto)
+        return ResponseEntity.ok().build()
+    }
+
+    @GetMapping("/love-info")
+    fun getLoveInfo(@AuthenticationPrincipal userId: String) =
+        ResponseEntity.ok(userService.getLoveInfo(userId))
 }
