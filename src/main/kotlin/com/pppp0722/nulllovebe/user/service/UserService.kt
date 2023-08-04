@@ -14,6 +14,7 @@ import com.pppp0722.nulllovebe.user.repository.AuthRepository
 import com.pppp0722.nulllovebe.user.repository.RefreshTokenRepository
 import com.pppp0722.nulllovebe.user.repository.UserRepository
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -66,7 +67,6 @@ class UserService(
 
     @Transactional
     fun signUp(signUpDto: SignUpDto) {
-        /*
         if (userRepository.existsByUserId(signUpDto.userId)) {
             throw CustomException(ErrorCode.DUPLICATED_USER_ID)
         }
@@ -83,9 +83,6 @@ class UserService(
         } catch (e: DataIntegrityViolationException) {
             throw CustomException(ErrorCode.DUPLICATED_USER_ID)
         }
-         */
-
-        val signedUpUser = userRepository.save(User.fromSignUpDto(signUpDto, passwordEncoder))
 
         val userDto = UserDto.fromEntity(signedUpUser)
         log.info("회원가입 완료. userDto: {}", userDto)
