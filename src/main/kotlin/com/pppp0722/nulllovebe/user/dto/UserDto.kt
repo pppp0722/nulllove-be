@@ -7,10 +7,15 @@ data class UserDto(
     var phone: String,
     val id: Long?
 ) {
+
     companion object {
         fun fromEntity(user: User) = UserDto(user.userId, user.phone, user.id)
     }
 }
+
+data class SendAuthCodeDto(
+    val phone: String
+)
 
 data class SignUpDto(
     val userId: String,
@@ -19,6 +24,7 @@ data class SignUpDto(
     val authCode: String
 )
 
-data class SendAuthCodeDto(
-    val phone: String
+data class LoginDto(
+    val userId: String,
+    val password: String
 )
